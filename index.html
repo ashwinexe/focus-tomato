@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Focus Tomato</title>
+    <link rel="stylesheet" href="styles.css">
+  </head>
+  <body>
+    <main class="app-shell">
+      <section class="timer-panel" aria-labelledby="app-title">
+        <header class="top-bar">
+          <div>
+            <p class="eyebrow">Pomodoro timer</p>
+            <h1 id="app-title">Focus Tomato</h1>
+          </div>
+          <div class="streak" aria-live="polite">
+            <span id="cycle-count">0</span>
+            <small>rounds</small>
+          </div>
+        </header>
+
+        <div class="mode-tabs" role="tablist" aria-label="Timer mode">
+          <button class="mode-button active" type="button" data-mode="focus">Focus</button>
+          <button class="mode-button" type="button" data-mode="short">Short break</button>
+          <button class="mode-button" type="button" data-mode="long">Long break</button>
+        </div>
+
+        <section class="timer-card" aria-label="Current timer">
+          <div class="progress-ring" aria-hidden="true">
+            <svg viewBox="0 0 220 220">
+              <circle class="ring-track" cx="110" cy="110" r="96"></circle>
+              <circle class="ring-progress" id="ring-progress" cx="110" cy="110" r="96"></circle>
+            </svg>
+            <div class="time-stack">
+              <span id="mode-label">Focus</span>
+              <strong id="time-left">25:00</strong>
+            </div>
+          </div>
+
+          <div class="controls" aria-label="Timer controls">
+            <button class="primary-button" id="start-pause" type="button">Start</button>
+            <button class="secondary-button" id="reset" type="button">Reset</button>
+            <button class="secondary-button" id="skip" type="button">Skip</button>
+          </div>
+        </section>
+
+        <section class="workbench" aria-label="Session setup">
+          <form class="intent-form" id="intent-form">
+            <label for="intent-input">Session focus</label>
+            <div>
+              <input id="intent-input" name="intent" type="text" maxlength="70" autocomplete="off" placeholder="What are you working on?">
+              <button type="submit">Set</button>
+            </div>
+          </form>
+
+          <p class="intent-preview" id="intent-preview">No focus set</p>
+
+          <div class="settings-grid" aria-label="Timer lengths">
+            <label>
+              Focus
+              <input id="focus-length" type="number" min="1" max="90" value="25">
+            </label>
+            <label>
+              Short
+              <input id="short-length" type="number" min="1" max="45" value="5">
+            </label>
+            <label>
+              Long
+              <input id="long-length" type="number" min="1" max="60" value="15">
+            </label>
+          </div>
+        </section>
+      </section>
+    </main>
+
+    <script src="script.js"></script>
+  </body>
+</html>
