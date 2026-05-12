@@ -2,6 +2,8 @@
 
 A simple browser-based Pomodoro timer for focus sessions, short breaks, and long breaks.
 
+Built in one shot during [Coworking Tuesdays](https://nsb.dev/coworking-tuesdays), then pushed to GitHub and published on Devfolio as a side project.
+
 ## Features
 
 - Focus, short break, and long break modes
