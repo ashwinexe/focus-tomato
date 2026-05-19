@@ -1,219 +1,170 @@
-const STORAGE_KEY = "focus-tomato-state";
-const RING_LENGTH = 603.19;
+const STORAGE_KEY = "done-drift-tasks";
 
-const defaults = {
-  lengths: {
-    focus: 25,
-    short: 5,
-    long: 15,
-  },
-  mode: "focus",
-  cycles: 0,
-  intent: "",
-};
+const defaultTasks = [
+  { id: crypto.randomUUID(), title: "Review side project submission", done: false },
+  { id: crypto.randomUUID(), title: "Ship the tiny todo app", done: false },
+  { id: crypto.randomUUID(), title: "Keep tomorrow lighter", done: false },
+];
 
-const modeLabels = {
-  focus: "Focus",
-  short: "Short break",
-  long: "Long break",
-};
+const taskForm = document.querySelector("#task-form");
+const taskInput = document.querySelector("#task-input");
+const taskList = document.querySelector("#task-list");
+const taskTemplate = document.querySelector("#task-template");
+const taskCount = document.querySelector("#task-count");
+const clearDoneButton = document.querySelector("#clear-done");
+const filterButtons = document.querySelectorAll(".filter-button");
 
 const state = {
-  ...defaults,
-  ...loadState(),
-  isRunning: false,
-  remainingSeconds: 0,
-  totalSeconds: 0,
-  intervalId: null,
+  tasks: loadTasks(),
+  filter: "all",
 };
 
-const modeButtons = document.querySelectorAll(".mode-button");
-const modeLabel = document.querySelector("#mode-label");
-const timeLeft = document.querySelector("#time-left");
-const ringProgress = document.querySelector("#ring-progress");
-const startPauseButton = document.querySelector("#start-pause");
-const resetButton = document.querySelector("#reset");
-const skipButton = document.querySelector("#skip");
-const cycleCount = document.querySelector("#cycle-count");
-const intentForm = document.querySelector("#intent-form");
-const intentInput = document.querySelector("#intent-input");
-const intentPreview = document.querySelector("#intent-preview");
-const lengthInputs = {
-  focus: document.querySelector("#focus-length"),
-  short: document.querySelector("#short-length"),
-  long: document.querySelector("#long-length"),
-};
-
-function loadState() {
+function loadTasks() {
   try {
     const saved = JSON.parse(localStorage.getItem(STORAGE_KEY));
-    if (!saved || typeof saved !== "object") {
-      return {};
+    if (Array.isArray(saved)) {
+      return saved;
     }
-
-    return {
-      lengths: { ...defaults.lengths, ...saved.lengths },
-      mode: saved.mode || defaults.mode,
-      cycles: Number(saved.cycles) || 0,
-      intent: saved.intent || "",
-    };
   } catch {
-    return {};
-  }
-}
-
-function saveState() {
-  localStorage.setItem(
-    STORAGE_KEY,
-    JSON.stringify({
-      lengths: state.lengths,
-      mode: state.mode,
-      cycles: state.cycles,
-      intent: state.intent,
-    }),
-  );
-}
-
-function secondsForMode(mode) {
-  return Math.max(1, Number(state.lengths[mode]) || defaults.lengths[mode]) * 60;
-}
-
-function setMode(mode, preserveProgress = false) {
-  state.mode = mode;
-  state.totalSeconds = secondsForMode(mode);
-
-  if (!preserveProgress) {
-    state.remainingSeconds = state.totalSeconds;
+    localStorage.removeItem(STORAGE_KEY);
   }
 
-  document.body.classList.toggle("short-mode", mode === "short");
-  document.body.classList.toggle("long-mode", mode === "long");
-
-  modeButtons.forEach((button) => {
-    const isActive = button.dataset.mode === mode;
-    button.classList.toggle("active", isActive);
-    button.setAttribute("aria-selected", String(isActive));
-  });
-
-  modeLabel.textContent = modeLabels[mode];
-  saveState();
-  render();
+  return defaultTasks;
 }
 
-function formatTime(totalSeconds) {
-  const minutes = Math.floor(totalSeconds / 60);
-  const seconds = totalSeconds % 60;
-  return `${minutes}:${String(seconds).padStart(2, "0")}`;
+function saveTasks() {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(state.tasks));
+}
+
+function visibleTasks() {
+  if (state.filter === "open") {
+    return state.tasks.filter((task) => !task.done);
+  }
+
+  if (state.filter === "done") {
+    return state.tasks.filter((task) => task.done);
+  }
+
+  return state.tasks;
+}
+
+function pluralize(count, word) {
+  return `${count} ${word}${count === 1 ? "" : "s"}`;
 }
 
 function render() {
-  timeLeft.textContent = formatTime(state.remainingSeconds);
-  cycleCount.textContent = state.cycles;
-  startPauseButton.textContent = state.isRunning ? "Pause" : "Start";
-  intentInput.value = state.intent;
-  intentPreview.textContent = state.intent || "No focus set";
+  taskList.replaceChildren();
 
-  Object.entries(lengthInputs).forEach(([mode, input]) => {
-    input.value = state.lengths[mode];
+  const tasks = visibleTasks();
+  tasks.forEach((task) => {
+    const item = taskTemplate.content.firstElementChild.cloneNode(true);
+    const toggle = item.querySelector(".task-toggle");
+    const title = item.querySelector(".task-title");
+    const deleteButton = item.querySelector(".delete-button");
+
+    item.dataset.id = task.id;
+    item.classList.toggle("completed", task.done);
+    toggle.checked = task.done;
+    title.textContent = task.title;
+    deleteButton.setAttribute("aria-label", `Delete ${task.title}`);
+
+    taskList.append(item);
   });
 
-  const elapsed = state.totalSeconds - state.remainingSeconds;
-  const progress = state.totalSeconds > 0 ? elapsed / state.totalSeconds : 0;
-  ringProgress.style.strokeDashoffset = String(RING_LENGTH * progress);
-}
-
-function tick() {
-  state.remainingSeconds -= 1;
-
-  if (state.remainingSeconds <= 0) {
-    completeMode();
-    return;
+  if (tasks.length === 0) {
+    const emptyState = document.createElement("li");
+    emptyState.className = "empty-state";
+    emptyState.textContent = state.filter === "done" ? "No completed tasks yet." : "Nothing here. Add a task to get moving.";
+    taskList.append(emptyState);
   }
 
-  render();
-}
+  const openCount = state.tasks.filter((task) => !task.done).length;
+  taskCount.textContent = `${pluralize(openCount, "open task")}`;
+  clearDoneButton.disabled = state.tasks.every((task) => !task.done);
 
-function startTimer() {
-  if (state.isRunning) {
-    return;
-  }
-
-  state.isRunning = true;
-  state.intervalId = window.setInterval(tick, 1000);
-  render();
-}
-
-function pauseTimer() {
-  window.clearInterval(state.intervalId);
-  state.intervalId = null;
-  state.isRunning = false;
-  render();
-}
-
-function resetTimer() {
-  pauseTimer();
-  state.remainingSeconds = secondsForMode(state.mode);
-  state.totalSeconds = state.remainingSeconds;
-  render();
-}
-
-function nextMode() {
-  if (state.mode === "focus") {
-    return state.cycles > 0 && state.cycles % 4 === 0 ? "long" : "short";
-  }
-
-  return "focus";
-}
-
-function completeMode() {
-  if (state.mode === "focus") {
-    state.cycles += 1;
-  }
-
-  pauseTimer();
-  setMode(nextMode());
-}
-
-startPauseButton.addEventListener("click", () => {
-  if (state.isRunning) {
-    pauseTimer();
-  } else {
-    startTimer();
-  }
-});
-
-resetButton.addEventListener("click", resetTimer);
-
-skipButton.addEventListener("click", completeMode);
-
-modeButtons.forEach((button) => {
-  button.addEventListener("click", () => {
-    pauseTimer();
-    setMode(button.dataset.mode);
+  filterButtons.forEach((button) => {
+    const isActive = button.dataset.filter === state.filter;
+    button.classList.toggle("active", isActive);
+    button.setAttribute("aria-pressed", String(isActive));
   });
-});
+}
 
-intentForm.addEventListener("submit", (event) => {
+function addTask(title) {
+  state.tasks.unshift({
+    id: crypto.randomUUID(),
+    title,
+    done: false,
+  });
+  saveTasks();
+  render();
+}
+
+function updateTask(id, updater) {
+  state.tasks = state.tasks.map((task) => (task.id === id ? updater(task) : task));
+  saveTasks();
+  render();
+}
+
+taskForm.addEventListener("submit", (event) => {
   event.preventDefault();
-  state.intent = intentInput.value.trim();
-  saveState();
+
+  const title = taskInput.value.trim();
+  if (!title) {
+    taskInput.focus();
+    return;
+  }
+
+  addTask(title);
+  taskForm.reset();
+  taskInput.focus();
+});
+
+taskList.addEventListener("change", (event) => {
+  if (!event.target.matches(".task-toggle")) {
+    return;
+  }
+
+  const item = event.target.closest(".task-item");
+  updateTask(item.dataset.id, (task) => ({ ...task, done: event.target.checked }));
+});
+
+taskList.addEventListener("dblclick", (event) => {
+  if (!event.target.matches(".task-title")) {
+    return;
+  }
+
+  const item = event.target.closest(".task-item");
+  const task = state.tasks.find((candidate) => candidate.id === item.dataset.id);
+  const nextTitle = window.prompt("Rename task", task.title);
+  const cleanTitle = nextTitle?.trim();
+
+  if (cleanTitle) {
+    updateTask(task.id, (currentTask) => ({ ...currentTask, title: cleanTitle }));
+  }
+});
+
+taskList.addEventListener("click", (event) => {
+  if (!event.target.matches(".delete-button")) {
+    return;
+  }
+
+  const item = event.target.closest(".task-item");
+  state.tasks = state.tasks.filter((task) => task.id !== item.dataset.id);
+  saveTasks();
   render();
 });
 
-Object.entries(lengthInputs).forEach(([mode, input]) => {
-  input.addEventListener("change", () => {
-    const value = Math.min(90, Math.max(1, Number(input.value) || defaults.lengths[mode]));
-    state.lengths[mode] = value;
-
-    if (state.mode === mode) {
-      pauseTimer();
-      state.totalSeconds = secondsForMode(mode);
-      state.remainingSeconds = state.totalSeconds;
-    }
-
-    saveState();
+filterButtons.forEach((button) => {
+  button.addEventListener("click", () => {
+    state.filter = button.dataset.filter;
     render();
   });
 });
 
-setMode(state.mode);
+clearDoneButton.addEventListener("click", () => {
+  state.tasks = state.tasks.filter((task) => !task.done);
+  saveTasks();
+  render();
+});
+
+render();

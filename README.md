@@ -1,17 +1,14 @@
-# Focus Tomato
+# Done Drift
 
-A simple browser-based Pomodoro timer for focus sessions, short breaks, and long breaks.
-
-Built in one shot during [Coworking Tuesdays](https://nsb.dev/coworking-tuesdays), then pushed to GitHub and published on Devfolio as a side project.
+Done Drift is a tiny offline to-do list for capturing daily tasks, filtering them by status, and clearing completed work.
 
 ## Features
 
-- Focus, short break, and long break modes
-- Start, pause, reset, and skip controls
-- Editable timer lengths
-- Session focus note
-- Completed focus round counter
-- Local browser persistence
+- Add, complete, delete, and rename tasks
+- Filter by all, open, or done
+- Clear completed tasks in one click
+- Local browser persistence with `localStorage`
+- Responsive static UI that runs without a build step
 
 ## Run
 

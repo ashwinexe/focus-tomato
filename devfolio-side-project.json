@@ -1,0 +1,16 @@
+{
+  "name": "Done Drift",
+  "tagline": "Offline task board for lightweight daily work.",
+  "status": "draft",
+  "commitMessage": "Create Done Drift",
+  "problemSolved": "Small daily tasks often get scattered across notes, chats, and memory. Done Drift keeps the workflow intentionally lightweight so a user can quickly write down what matters, filter open or completed work, and close the loop as tasks get done.",
+  "challengesSurmounted": "The main challenge was keeping the app small while still making it feel useful. The final version includes local persistence, filters, empty states, task cleanup, task renaming, and a responsive layout without a build system or external dependencies.",
+  "hashtags": ["HTML", "CSS", "JavaScript", "localStorage"],
+  "platforms": ["Web"],
+  "pictures": [
+    "https://raw.githubusercontent.com/ashwinexe/focus-tomato/main/assets/done-drift-screenshot.png"
+  ],
+  "links": [
+    "https://github.com/ashwinexe/focus-tomato"
+  ]
+}
