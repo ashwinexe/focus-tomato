@@ -8,8 +8,10 @@
   "hashtags": ["HTML", "CSS", "JavaScript", "localStorage"],
   "platforms": ["Web"],
   "pictures": [
-    "https://raw.githubusercontent.com/ashwinexe/focus-tomato/main/assets/done-drift-screenshot.png"
+    "projects/done-drift-a8d1/a88aa786-04a7-41bd-b346-68289616627e.png"
   ],
+  "favicon": "projects/done-drift-a8d1/ba15803c-c8d3-4b76-8cf6-50aa49fb06f2.png",
+  "cover_img": "projects/done-drift-a8d1/a88aa786-04a7-41bd-b346-68289616627e.png",
   "links": [
     "https://github.com/ashwinexe/focus-tomato"
   ]
